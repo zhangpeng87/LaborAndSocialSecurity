@@ -16,22 +16,25 @@ namespace LaborAndSocialSecurity.Uploaders
         /// <summary>
         /// 上传的数据。
         /// </summary>
-        public object UploadedData { get; set; }
+        public IUploadable UploadedData { get; set; }
         /// <summary>
         /// 上传的结果。
         /// </summary>
         public OutputResult UploadedResult { get; set; }
+
+        public bool HasSuccessfulUploaded { get; set; }
 
         public UploadCompletedEventArgs()
         {
 
         }
 
-        public UploadCompletedEventArgs(DateTime time, object uploadedData, OutputResult outputResult)
+        public UploadCompletedEventArgs(DateTime time, IUploadable uploadedData, OutputResult outputResult, bool uploaded)
         {
             this.UploadTime = time;
             this.UploadedData = uploadedData;
             this.UploadedResult = outputResult;
+            this.HasSuccessfulUploaded = uploaded;
         }
     }
 }

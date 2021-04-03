@@ -1,4 +1,5 @@
-﻿using LaborAndSocialSecurity.Utils;
+﻿using LaborAndSocialSecurity.Uploaders;
+using LaborAndSocialSecurity.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace LaborAndSocialSecurity.Models
     /// <summary>
     /// 考勤基本信息。
     /// </summary>
-    public class WorkerAttendance
+    public class WorkerAttendance : IUploadable
     {
         /// <summary>
         /// 平台为项目分配的接入编号。
@@ -25,6 +26,9 @@ namespace LaborAndSocialSecurity.Models
         /// 考勤列表。JSON数组，数组长度不超过20。
         /// </summary>
         public IEnumerable<Attendance> dataList;
+
+        [JsonIgnore]
+        public int DataId => dataList.FirstOrDefault()?.id ?? default(int);
 
         /// <summary>
         /// 上传方法。

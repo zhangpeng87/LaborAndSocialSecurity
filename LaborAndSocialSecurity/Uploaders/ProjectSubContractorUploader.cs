@@ -1,18 +1,17 @@
 ﻿using LaborAndSocialSecurity.Models;
 using LaborAndSocialSecurity.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
     /// <summary>
     /// 参建单位信息上传。
     /// </summary>
-    public class ProjectSubContractorUploader
+    public class ProjectSubContractorUploader : Uploader<ProjectSubContractor>
     {
         /// <summary>
         /// 本平台分配的项目ID。
@@ -22,11 +21,6 @@ namespace LaborAndSocialSecurity.Uploaders
         /// 施工项目ID。（品茗）
         /// </summary>
         private int project_id;
-
-        /// <summary>
-        /// 上传完成事件。
-        /// </summary>
-        public event UploadCompletedEventHandler UploadCompleted;
 
         /// <summary>
         /// 构造函数。
@@ -40,22 +34,10 @@ namespace LaborAndSocialSecurity.Uploaders
         }
 
         /// <summary>
-        /// 开始上传相关数据。
-        /// </summary>
-        public void BeginUpload()
-        {
-            // 获取上传数据
-            var list = this.GetData();
-            // 进行上传数据
-            foreach (var item in list)
-                this.UploadData(item);
-        }
-
-        /// <summary>
         /// 获取上传数据。
         /// </summary>
         /// <returns></returns>
-        private IEnumerable<ProjectSubContractor> GetData()
+        protected override IEnumerable<ProjectSubContractor> GetData(object parm)
         {
             IEnumerable<ProjectSubContractor> result = null;
             // 只查询总包和劳务分包数据
@@ -83,38 +65,15 @@ namespace LaborAndSocialSecurity.Uploaders
             return result;
         }
 
-        /// <summary>
-        /// 异步上传数据。
-        /// </summary>
-        /// <param name="data"></param>
-        private void UploadData(ProjectSubContractor data)
+        protected override bool HasSuccessfulUploaded(ProjectSubContractor data, out DateTime time, out OutputResult result)
         {
-            try
-            {
-                DateTime start = DateTime.Now;
-                OutputResult result = data.Upload();
-                OutputContext context = new OutputContext(result);
-                OutputResult final = context.NextCall();
-                // 通知上传完成事件订阅者
-                OnUploadCompleted(new UploadCompletedEventArgs(start, data, final));
-            }
-            catch (Exception e)
-            {
-                LogUtils4Error.Logger.Debug($"Exception: ProjectSubContractorUploader.UploadData: { e.Message }. data: { data.Serialize2JSON() }");
-                //throw;
-            }
-        }
+            var b = base.HasSuccessfulUploaded(data, out time, out result);
+            if (b) return true;
 
-        /// <summary>
-        /// 可以供继承类的重写。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnUploadCompleted(UploadCompletedEventArgs e)
-        {
-            if (this.UploadCompleted != null)
-            {
-                this.UploadCompleted(this, e);
-            }
+            string code = result?.code;
+            if (OutputCode.重复上传.Equals(code)) return true;
+
+            return false;
         }
     }
 }

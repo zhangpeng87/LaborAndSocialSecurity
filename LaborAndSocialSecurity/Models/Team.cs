@@ -1,4 +1,5 @@
-﻿using LaborAndSocialSecurity.Utils;
+﻿using LaborAndSocialSecurity.Uploaders;
+using LaborAndSocialSecurity.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,7 +26,7 @@ namespace LaborAndSocialSecurity.Models
         public int project_id;
     }
 
-    public class Team
+    public class Team : IUploadable
     {
         /// <summary>
         /// 本平台分配的项目ID
@@ -57,6 +58,9 @@ namespace LaborAndSocialSecurity.Models
         /// </summary>
         [JsonIgnore]
         public TeamAssociated associated;
+
+        [JsonIgnore]
+        public int DataId => this.associated.group_id;
 
         public OutputResult Upload()
         {

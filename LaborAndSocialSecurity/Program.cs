@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -143,8 +144,8 @@ namespace LaborAndSocialSecurity
 
             ProjectWorkerUploader workerUploader = new ProjectWorkerUploader(teamSysNo, data);
             workerUploader.UploadCompleted += UploadCompletedEventDebugLogHandler;
-            workerUploader.UploadCompleted += SaveWorkerInfo;
-            //workerUploader.UploadCompleted += WorkerInfoUploadCompletedEventHandler;
+            //workerUploader.UploadCompleted += SaveWorkerInfo;
+            workerUploader.UploadCompleted += WorkerInfoUploadCompletedEventHandler;
 
             workerUploader.BeginUpload();
         }
@@ -293,6 +294,13 @@ namespace LaborAndSocialSecurity
             var result = JObject.Parse(j);
             var b = result.ContainsKey("data");
             var v = result.SelectToken("$.data.phoneNumber")?.ToString();
+        }
+
+        static void Main700(string[] args)
+        {
+            List<int> list = new List<int> { 2, 7, 4, 2 };
+            string result = string.Join<int>(",", list);
+            Console.WriteLine(result);
         }
     }
 }

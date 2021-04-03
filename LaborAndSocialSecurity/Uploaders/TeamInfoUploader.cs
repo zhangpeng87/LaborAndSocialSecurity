@@ -7,20 +7,13 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
-    public class TeamInfoUploader
+    public class TeamInfoUploader : Uploader<Team>
     {
         private string projectCode;
         private int cooperator_id;
-
-        /// <summary>
-        /// 上传完成事件。
-        /// </summary>
-        public event UploadCompletedEventHandler UploadCompleted;
 
         /// <summary>
         /// 构造函数。
@@ -34,22 +27,10 @@ namespace LaborAndSocialSecurity.Uploaders
         }
 
         /// <summary>
-        /// 开始上传相关数据。
-        /// </summary>
-        public void BeginUpload()
-        {
-            // 获取上传数据
-            var list = this.GetData();
-            // 进行上传数据
-            foreach (var item in list)
-                this.UploadData(item);
-        }
-
-        /// <summary>
         /// 获取上传数据。
         /// </summary>
         /// <returns></returns>
-        private IEnumerable<Team> GetData()
+        protected override IEnumerable<Team> GetData(object parm)
         {
             IEnumerable<Team> result = null;
 
@@ -76,38 +57,15 @@ namespace LaborAndSocialSecurity.Uploaders
             return result;
         }
 
-        /// <summary>
-        /// 异步上传数据。
-        /// </summary>
-        /// <param name="data"></param>
-        private void UploadData(Team data)
+        protected override bool HasSuccessfulUploaded(Team data, out DateTime time, out OutputResult result)
         {
-            try
-            {
-                DateTime start = DateTime.Now;
-                OutputResult result = data.Upload();
-                OutputContext context = new OutputContext(result, data);
-                OutputResult final = context.NextCall();
-                // 通知上传完成事件订阅者
-                OnUploadCompleted(new UploadCompletedEventArgs(start, data, final));
-            }
-            catch (Exception e)
-            {
-                LogUtils4Error.Logger.Debug($"Exception: TeamInfoUploader.UploadData: { e.Message }. data: { data.Serialize2JSON() }");
-                //throw;
-            }
-        }
+            var b = base.HasSuccessfulUploaded(data, out time, out result);
+            if (b) return true;
 
-        /// <summary>
-        /// 可以供继承类的重写。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnUploadCompleted(UploadCompletedEventArgs e)
-        {
-            if (this.UploadCompleted != null)
-            {
-                this.UploadCompleted(this, e);
-            }
+            string code = result?.code;
+            if (OutputCode.重复上传.Equals(code)) return true;
+
+            return false;
         }
     }
 }

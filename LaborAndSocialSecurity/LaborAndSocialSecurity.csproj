@@ -119,6 +119,7 @@
     <Compile Include="Models\ProjectSubContractor.cs" />
     <Compile Include="Models\ProjectWorker.cs" />
     <Compile Include="Models\Team.cs" />
+    <Compile Include="Models\UploadRecord.cs" />
     <Compile Include="Models\Worker.cs" />
     <Compile Include="Models\WorkerAttendance.cs" />
     <Compile Include="Program.cs" />
@@ -126,12 +127,15 @@
     <Compile Include="Uploaders\CooperatorInfoUploader.cs" />
     <Compile Include="Uploaders\Dispatcher.cs" />
     <Compile Include="Uploaders\EnterpriseUploader.cs" />
+    <Compile Include="Uploaders\IUploadable.cs" />
     <Compile Include="Uploaders\ProjectInfoUploader.cs" />
     <Compile Include="Uploaders\ProjectSubContractorUploader.cs" />
     <Compile Include="Uploaders\ProjectWorkerUploader.cs" />
     <Compile Include="Uploaders\TeamInfoUploader.cs" />
     <Compile Include="Uploaders\UploadCompletedEventArgs.cs" />
+    <Compile Include="Uploaders\Uploader.cs" />
     <Compile Include="Uploaders\WorkerAttendanceUploader.cs" />
+    <Compile Include="Utils\ArDBConnection.cs" />
     <Compile Include="Utils\DBHelperMySQL.cs" />
     <Compile Include="Utils\EncryptUtils.cs" />
     <Compile Include="Utils\EnumExtensions.cs" />
@@ -140,6 +144,7 @@
     <Compile Include="Utils\LogUtils.cs" />
     <Compile Include="Utils\ObjectExtensions.cs" />
     <Compile Include="Utils\PmApiCaller.cs" />
+    <Compile Include="Utils\ProjectLog.cs" />
     <Compile Include="Utils\WebApiCaller.cs" />
     <Compile Include="Utils\WebServiceCaller.cs" />
   </ItemGroup>

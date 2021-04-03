@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,8 @@ namespace LaborAndSocialSecurity.Models
 {
     public class Attendance
     {
+        [JsonIgnore]
+        public int id;
         /// <summary>
         /// 身份证号 AES。
         /// </summary>

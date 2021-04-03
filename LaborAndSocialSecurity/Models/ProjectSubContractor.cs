@@ -1,4 +1,5 @@
-﻿using LaborAndSocialSecurity.Utils;
+﻿using LaborAndSocialSecurity.Uploaders;
+using LaborAndSocialSecurity.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace LaborAndSocialSecurity.Models
     /// <summary>
     /// 参建单位上传信息。
     /// </summary>
-    public class ProjectSubContractor
+    public class ProjectSubContractor : IUploadable
     {
         /// <summary>
         /// 本平台分配的项目ID。
@@ -72,6 +73,9 @@ namespace LaborAndSocialSecurity.Models
         /// </summary>
         [JsonIgnore]
         public ProjectSubContractorAssociated associated;
+
+        [JsonIgnore]
+        public int DataId => this.associated.cooperator_id;
 
         /// <summary>
         /// 上传方法。

@@ -1,4 +1,5 @@
-﻿using LaborAndSocialSecurity.Utils;
+﻿using LaborAndSocialSecurity.Uploaders;
+using LaborAndSocialSecurity.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Models
 {
-    public class ProjectWorker
+    public class ProjectWorker : IUploadable
     {
         /// <summary>
         /// 本平台分配的项目ID。
@@ -34,6 +35,9 @@ namespace LaborAndSocialSecurity.Models
         /// 人员列表数据,JSON 数组，数量不能超过 5。
         /// </summary>
         public IEnumerable<Worker> workerList;
+
+        [JsonIgnore]
+        public int DataId => workerList.FirstOrDefault()?.associated.worker_id ?? default(int);
 
         public OutputResult Upload()
         {

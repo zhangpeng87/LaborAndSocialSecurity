@@ -4,20 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
-    public class ProjectWorkerUploader
+    public class ProjectWorkerUploader : Uploader<ProjectWorker>
     {
         private string teamSysNo;
         private readonly Team team;
-
-        /// <summary>
-        /// 上传完成事件。
-        /// </summary>
-        public event UploadCompletedEventHandler UploadCompleted;
 
         public ProjectWorkerUploader(string teamSysNo, Team team)
         {
@@ -26,25 +19,13 @@ namespace LaborAndSocialSecurity.Uploaders
         }
 
         /// <summary>
-        /// 开始上传相关数据。
-        /// </summary>
-        public void BeginUpload()
-        {
-            // 获取上传数据
-            var list = this.GetData();
-            // 进行上传数据
-            foreach (var item in list)
-                this.UploadData(item);
-        }
-
-        /// <summary>
         /// 获取上传数据。
         /// </summary>
         /// <returns></returns>
-        private IEnumerable<ProjectWorker> GetData()
+        protected override IEnumerable<ProjectWorker> GetData(object parm)
         {
-            // 数量不能超过 5
-            int size = 1;
+            // 数量不能超过 5，此处固定 1条
+            const int size = 1;
             
             DataSet set = DBHelperMySQL.Query($"SELECT worker_id, company_id, project_id, cooperator_id, group_id, person_id, `name`, sex, birthday, id_card, profession_id, role_id, nation, address, mobile, entry_time FROM f_worker S WHERE status IN (1,2) AND group_id = { this.team.associated.group_id } AND cooperator_id = { this.team.associated.cooperator_id } AND project_id = { this.team.associated.project_id };");
 
@@ -87,38 +68,15 @@ namespace LaborAndSocialSecurity.Uploaders
             }
         }
 
-        /// <summary>
-        /// 异步上传数据。
-        /// </summary>
-        /// <param name="data"></param>
-        private void UploadData(ProjectWorker data)
+        protected override bool HasSuccessfulUploaded(ProjectWorker data, out DateTime time, out OutputResult result)
         {
-            try
-            {
-                DateTime start = DateTime.Now;
-                OutputResult result = data.Upload();
-                OutputContext context = new OutputContext(result);
-                OutputResult final = context.NextCall();
-                // 通知上传完成事件订阅者
-                OnUploadCompleted(new UploadCompletedEventArgs(start, data, final));
-            }
-            catch (Exception e)
-            {
-                LogUtils4Error.Logger.Debug($"Exception: ProjectWorkerUploader.UploadData: { e.Message }. data: { data.Serialize2JSON() }");
-                //throw;
-            }
-        }
+            var b = base.HasSuccessfulUploaded(data, out time, out result);
+            if (b) return true;
 
-        /// <summary>
-        /// 可以供继承类的重写。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnUploadCompleted(UploadCompletedEventArgs e)
-        {
-            if (this.UploadCompleted != null)
-            {
-                this.UploadCompleted(this, e);
-            }
+            string code = result?.code;
+            if (OutputCode.人员已存在.Equals(code)) return true;
+
+            return false;
         }
     }
 }
