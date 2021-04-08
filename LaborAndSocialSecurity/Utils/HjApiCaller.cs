@@ -24,7 +24,7 @@ namespace LaborAndSocialSecurity.Utils
         public string Version { get; set; }                     // 接口版本
         public string Format { get; set; } = "json";            // 返回类型
 
-        public JObject Call(object input)
+        public JObject ReadyToCall(object input)
         {
             var command = new Dispatcher.ApiInvokeCommand(this, input);
             var autoEvent = Dispatcher.Instance.EnqueueCommand(command);

@@ -42,7 +42,7 @@ namespace LaborAndSocialSecurity
                 LogUtils.Logger.Info($"{ HjApiCaller.ProjectName },{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },上传完成并{ (anyExceptions ? "有" : "无")}异常发生");
 
                 // 2、打开新的程序
-                Process.Start("LaborAndSocialSecurity.exe");
+                var p = Process.Start("LaborAndSocialSecurity.exe");
 
                 Environment.Exit(0);
             }
@@ -225,7 +225,7 @@ namespace LaborAndSocialSecurity
                 contractorCorpCode = "91420100744771385L"                               //  施工方统一社会信用代码
             };
 
-            var output = api.Call(input);
+            var output = api.ReadyToCall(input);
 
             Console.WriteLine(output.Serialize2JSON());
         }

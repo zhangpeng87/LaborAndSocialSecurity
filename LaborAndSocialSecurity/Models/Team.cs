@@ -72,7 +72,7 @@ namespace LaborAndSocialSecurity.Models
                 Format = "json"
             };
             
-            return JsonConvert.DeserializeObject<OutputResult>(api.Call(this).ToString());
+            return JsonConvert.DeserializeObject<OutputResult>(api.ReadyToCall(this).ToString());
         }
 
         public static OutputResult Query(int pageIndex, int pageSize, string projectCode)
@@ -92,7 +92,7 @@ namespace LaborAndSocialSecurity.Models
                 projectCode
             };
 
-            return JsonConvert.DeserializeObject<OutputResult>(api.Call(input).ToString());
+            return JsonConvert.DeserializeObject<OutputResult>(api.ReadyToCall(input).ToString());
         }
 
         public static OutputResult SysNo(string projectCode, string teamName)
@@ -111,7 +111,7 @@ namespace LaborAndSocialSecurity.Models
                 teamName
             };
 
-            return JsonConvert.DeserializeObject<OutputResult>(api.Call(input).ToString());
+            return JsonConvert.DeserializeObject<OutputResult>(api.ReadyToCall(input).ToString());
         }
 
         /// <summary>

@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
+    public delegate void UploadCompletedEventHandler(object sender, UploadCompletedEventArgs e);
+
     public abstract class Uploader<T> where T : IUploadable
     {
         protected object parm4GetData;
@@ -27,28 +29,28 @@ namespace LaborAndSocialSecurity.Uploaders
             // 获取上传数据
             var list = this.GetData(parm4GetData);
 
-            DateTime time;
-            OutputResult result;
+            //DateTime time;
+            //OutputResult result;
 
-            // 进行上传数据
-            foreach (T item in list)
-                if (HasSuccessfulUploaded(item, out time, out result))
-                    this.Notify(time, item, result);
-                else
-                    this.UploadData(item);
-
-            //list.AsParallel()
-            //    .WithDegreeOfParallelism(5)
-            //    .ForAll(item =>
-            //{
-            //    DateTime time;
-            //    OutputResult result;
-
+            //// 进行上传数据
+            //foreach (T item in list)
             //    if (HasSuccessfulUploaded(item, out time, out result))
             //        this.Notify(time, item, result);
             //    else
             //        this.UploadData(item);
-            //});
+
+            list.AsParallel()
+                .WithDegreeOfParallelism(5)
+                .ForAll(item =>
+                {
+                    DateTime time;
+                    OutputResult result;
+
+                    if (HasSuccessfulUploaded(item, out time, out result))
+                        this.Notify(time, item, result);
+                    else
+                        this.UploadData(item);
+                });
         }
         
         protected abstract IEnumerable<T> GetData(object parm = null);
@@ -84,6 +86,7 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             try
             {
+                LogUtils4Debug.Logger.Debug($"开始上传数据：{ data.Serialize2JSON() }");
                 DateTime start = DateTime.Now;
                 OutputResult result = data.Upload();
                 OutputContext context = new OutputContext(result, data);
@@ -105,6 +108,7 @@ namespace LaborAndSocialSecurity.Uploaders
         /// </summary>
         protected void Notify(DateTime time, T data, OutputResult result)
         {
+            LogUtils4Debug.Logger.Debug($"数据已成功地上传过：{ data.Serialize2JSON() }");
             OnUploadCompleted(new UploadCompletedEventArgs(time, data, result, true));
         }
 

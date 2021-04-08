@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
-    public delegate void UploadCompletedEventHandler(object sender, UploadCompletedEventArgs e);
-
     /// <summary>
     /// 企业信息上传。
     /// </summary>

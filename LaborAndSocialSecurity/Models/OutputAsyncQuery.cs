@@ -34,7 +34,7 @@ namespace LaborAndSocialSecurity.Models
             TimerCallback callback = (state) =>
             {
                 HjApi api = new HjApi() { Endpoint = "open/api/async", Method = "Async", Version = "2.1" };
-                JObject res = api.Call(new { requestSerialCode });
+                JObject res = api.ReadyToCall(new { requestSerialCode });
                 invokeCount++;
 
                 if (res["message"]?.ToString().IndexOf("频繁") > -1) return;

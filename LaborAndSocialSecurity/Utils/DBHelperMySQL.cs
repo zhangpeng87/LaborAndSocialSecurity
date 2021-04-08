@@ -96,8 +96,8 @@ namespace LaborAndSocialSecurity.Utils
                 {
                     try
                     {
+                        LogUtils4Debug.Logger.Debug($"向品茗数据库查询：{ SQLString }");
                         MySqlDataAdapter command = new MySqlDataAdapter(SQLString, connection);
-
                         command.Fill(ds, "ds");
                     }
                     catch (MySqlException e)
