@@ -144,7 +144,6 @@ namespace LaborAndSocialSecurity
 
             ProjectWorkerUploader workerUploader = new ProjectWorkerUploader(teamSysNo, data);
             workerUploader.UploadCompleted += UploadCompletedEventDebugLogHandler;
-            //workerUploader.UploadCompleted += SaveWorkerInfo;
             workerUploader.UploadCompleted += WorkerInfoUploadCompletedEventHandler;
 
             workerUploader.BeginUpload();

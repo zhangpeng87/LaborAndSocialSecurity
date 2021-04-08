@@ -27,7 +27,7 @@ namespace LaborAndSocialSecurity.Uploaders
             // 数量不能超过 5，此处固定 1条
             const int size = 1;
             
-            DataSet set = DBHelperMySQL.Query($"SELECT worker_id, company_id, project_id, cooperator_id, group_id, person_id, `name`, sex, birthday, id_card, profession_id, role_id, nation, address, mobile, entry_time FROM f_worker S WHERE status IN (1,2) AND group_id = { this.team.associated.group_id } AND cooperator_id = { this.team.associated.cooperator_id } AND project_id = { this.team.associated.project_id };");
+            DataSet set = DBHelperMySQL.TryQuery($"SELECT worker_id, company_id, project_id, cooperator_id, group_id, person_id, `name`, sex, birthday, id_card, profession_id, role_id, nation, address, mobile, entry_time FROM f_worker S WHERE status IN (1,2) AND group_id = { this.team.associated.group_id } AND cooperator_id = { this.team.associated.cooperator_id } AND project_id = { this.team.associated.project_id };");
 
             double d = set.Tables[0].Rows.Count * 1d / size;
             int total = (int)Math.Ceiling(d);

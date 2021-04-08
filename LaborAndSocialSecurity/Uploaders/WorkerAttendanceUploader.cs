@@ -27,7 +27,7 @@ namespace LaborAndSocialSecurity.Uploaders
             // 此处必须固定 1条
             const int size = 1;
 
-            DataSet set = DBHelperMySQL.Query($"SELECT record_id, project_id, worker_id, device_id, record_time, type FROM d_card_record S WHERE S.worker_id = { worker.associated.worker_id } AND record_time BETWEEN '2021-04-01 00:00:00' AND '2021-04-01 23:59:59' ORDER BY S.record_time DESC;", "zhgd_person");
+            DataSet set = DBHelperMySQL.TryQuery($"SELECT record_id, project_id, worker_id, device_id, record_time, type FROM d_card_record S WHERE S.worker_id = { worker.associated.worker_id } AND record_time BETWEEN '2021-04-01 00:00:00' AND '2021-04-01 23:59:59' ORDER BY S.record_time DESC;", "zhgd_person");
 
             double d = set.Tables[0].Rows.Count * 1d / size;
             int total = (int)Math.Ceiling(d);

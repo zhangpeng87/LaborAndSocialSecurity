@@ -41,7 +41,7 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             IEnumerable<ProjectSubContractor> result = null;
             // 只查询总包和劳务分包数据
-            DataSet set = DBHelperMySQL.Query($"SELECT cooperator_id, company_id, project_id, unit_name, unit_type, credit_code, unit_person, contacts_mobile, remark FROM f_cooperator S WHERE S.project_id = { this.project_id } AND S.unit_type IN (1,2,3,4,5,6,9,12,13) AND S.`status` = 1;");
+            DataSet set = DBHelperMySQL.TryQuery($"SELECT cooperator_id, company_id, project_id, unit_name, unit_type, credit_code, unit_person, contacts_mobile, remark FROM f_cooperator S WHERE S.project_id = { this.project_id } AND S.unit_type IN (1,2,3,4,5,6,9,12,13) AND S.`status` = 1;");
 
             result = from row in set.Tables[0].AsEnumerable()
                      where !string.IsNullOrEmpty(row["remark"]?.ToString()?.Trim())

@@ -34,7 +34,7 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             IEnumerable<Team> result = null;
 
-            DataSet set = DBHelperMySQL.Query($"SELECT S.group_id, S.cooperator_id, P.project_id, P.credit_code, P.unit_name, S.`name`, P.remark FROM f_group S INNER JOIN f_cooperator P ON S.cooperator_id = P.cooperator_id WHERE P.cooperator_id = { this.cooperator_id };");
+            DataSet set = DBHelperMySQL.TryQuery($"SELECT S.group_id, S.cooperator_id, P.project_id, P.credit_code, P.unit_name, S.`name`, P.remark FROM f_group S INNER JOIN f_cooperator P ON S.cooperator_id = P.cooperator_id WHERE P.cooperator_id = { this.cooperator_id };");
 
             result = from row in set.Tables[0].AsEnumerable()
                      select new Team

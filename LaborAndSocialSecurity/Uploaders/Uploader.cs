@@ -24,19 +24,33 @@ namespace LaborAndSocialSecurity.Uploaders
         /// </summary>
         public virtual void BeginUpload()
         {
+            // 获取上传数据
+            var list = this.GetData(parm4GetData);
+
             DateTime time;
             OutputResult result;
 
-            // 获取上传数据
-            var list = this.GetData(parm4GetData);
             // 进行上传数据
             foreach (T item in list)
                 if (HasSuccessfulUploaded(item, out time, out result))
                     this.Notify(time, item, result);
                 else
                     this.UploadData(item);
-        }
 
+            //list.AsParallel()
+            //    .WithDegreeOfParallelism(5)
+            //    .ForAll(item =>
+            //{
+            //    DateTime time;
+            //    OutputResult result;
+
+            //    if (HasSuccessfulUploaded(item, out time, out result))
+            //        this.Notify(time, item, result);
+            //    else
+            //        this.UploadData(item);
+            //});
+        }
+        
         protected abstract IEnumerable<T> GetData(object parm = null);
 
         /// <summary>
