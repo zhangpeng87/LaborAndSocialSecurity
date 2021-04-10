@@ -19,6 +19,18 @@ namespace LaborAndSocialSecurity
         private static bool anyExceptions = false;
         #region 上传客户端
 
+        private static readonly Timer timer = new Timer(TimerCallback, null, 1000, 3000);
+
+        private static readonly object obj = new object();
+        private static void TimerCallback(object s)
+        {
+            lock (obj)
+            {
+                Console.Clear();
+                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName }, 关联中的线程数量：{ Process.GetCurrentProcess().Threads.Count }, 命令队列中的数量：{ Dispatcher.Instance.Count }."); 
+            }
+        }
+
         static void Main(string[] args)
         {
             // 初始化上传标段参数
@@ -27,7 +39,6 @@ namespace LaborAndSocialSecurity
             
             try
             {
-                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName }.");
                 StartUpload();
             }
             catch (Exception e)
@@ -41,6 +52,7 @@ namespace LaborAndSocialSecurity
                 LogUtils4Debug.Logger.Debug($"================={ HjApiCaller.ProjectName }，已上传完成！=================");
                 LogUtils.Logger.Info($"{ HjApiCaller.ProjectName },{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },上传完成并{ (anyExceptions ? "有" : "无")}异常发生");
 
+                DBHelperMySQL.Dispose();
                 // 2、打开新的程序
                 var p = Process.Start("LaborAndSocialSecurity.exe");
 
@@ -300,6 +312,15 @@ namespace LaborAndSocialSecurity
             List<int> list = new List<int> { 2, 7, 4, 2 };
             string result = string.Join<int>(",", list);
             Console.WriteLine(result);
+        }
+
+        static void Main800(string[] args)
+        {
+            var j = "{\"code\":\"1\",\"message\":\"请求过于频繁请稍后再试！\",\"data\":null}";
+            var r = JObject.Parse(j);
+
+            bool b = string.Compare(AsyncProcessStatus.待处理.Description(), r.SelectToken("data")?.SelectToken("status")?.ToString()) == 0;
+
         }
     }
 }

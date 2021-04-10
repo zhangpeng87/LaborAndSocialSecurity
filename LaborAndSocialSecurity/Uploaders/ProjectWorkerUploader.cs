@@ -12,6 +12,18 @@ namespace LaborAndSocialSecurity.Uploaders
         private string teamSysNo;
         private readonly Team team;
 
+        #region 静态成员
+        private static readonly string QueryString;
+        // 缓存查询结果
+        private static readonly DataTable cache = new DataTable();
+        static ProjectWorkerUploader()
+        {
+            QueryString = $"SELECT S.worker_id, S.company_id, S.project_id, S.cooperator_id, S.group_id, S.person_id, S.`name`, S.sex, S.birthday, S.id_card, S.profession_id, S.role_id, S.nation, S.address, S.mobile, S.entry_time FROM f_worker S INNER JOIN f_group G ON S.group_id = G.group_id INNER JOIN f_cooperator C ON G.cooperator_id = C.cooperator_id WHERE S.STATUS IN ( 1, 2 ) AND C.project_id = { HjApiCaller.Project_id };";
+            var resultSet = DBHelperMySQL.TryQuery(QueryString);
+            cache = resultSet.Tables[0];
+        }
+        #endregion
+
         public ProjectWorkerUploader(string teamSysNo, Team team)
         {
             this.teamSysNo = teamSysNo;
@@ -26,10 +38,9 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             // 数量不能超过 5，此处固定 1条
             const int size = 1;
-            
-            DataSet set = DBHelperMySQL.TryQuery($"SELECT worker_id, company_id, project_id, cooperator_id, group_id, person_id, `name`, sex, birthday, id_card, profession_id, role_id, nation, address, mobile, entry_time FROM f_worker S WHERE status IN (1,2) AND group_id = { this.team.associated.group_id } AND cooperator_id = { this.team.associated.cooperator_id } AND project_id = { this.team.associated.project_id };");
+            var filtered = cache.Select($"group_id = { this.team.associated.group_id } AND cooperator_id = { this.team.associated.cooperator_id } AND project_id = { this.team.associated.project_id }");
 
-            double d = set.Tables[0].Rows.Count * 1d / size;
+            double d = filtered.Length * 1d / size;
             int total = (int)Math.Ceiling(d);
 
             for (int i = 0; i < total; i++)
@@ -41,7 +52,7 @@ namespace LaborAndSocialSecurity.Uploaders
                     teamName = this.team.teamName,
                     teamSysNo = teamSysNo,
                     corpName = this.team.corpName,
-                    workerList = from row in set.Tables[0].AsEnumerable().Skip(i * size).Take(size)
+                    workerList = from row in filtered.Skip(i * size).Take(size)
                                  let tmp = Worker.GetHjWorkType(Convert.ToInt32(row["role_id"]), Convert.ToInt32(row["profession_id"]))
                                  let _idcard = string.IsNullOrEmpty(row["id_card"].ToString()) ? "未知" : row["id_card"].ToString().ToUpper()
                                  select new Worker
@@ -75,6 +86,7 @@ namespace LaborAndSocialSecurity.Uploaders
 
             string code = result?.code;
             if (OutputCode.人员已存在.Equals(code)) return true;
+            else if (OutputCode.参数校验失败.Equals(code)) return true;
 
             return false;
         }

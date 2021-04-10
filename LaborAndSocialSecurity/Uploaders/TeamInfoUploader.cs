@@ -1,12 +1,9 @@
 ﻿using LaborAndSocialSecurity.Models;
 using LaborAndSocialSecurity.Utils;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LaborAndSocialSecurity.Uploaders
 {
@@ -26,6 +23,19 @@ namespace LaborAndSocialSecurity.Uploaders
             this.cooperator_id = cooperator_id;
         }
 
+        #region 静态成员
+        private static readonly string QueryString;
+        // 缓存查询结果
+        private static readonly DataTable cache = new DataTable();
+
+        static TeamInfoUploader()
+        {
+            QueryString = $"SELECT S.group_id, S.cooperator_id, P.project_id, P.credit_code, P.unit_name, S.`name`, P.remark FROM f_group S INNER JOIN f_cooperator P ON S.cooperator_id = P.cooperator_id WHERE P.project_id = { HjApiCaller.Project_id };";
+            var resultSet = DBHelperMySQL.TryQuery(QueryString);
+            cache = resultSet.Tables[0];
+        }
+        #endregion
+
         /// <summary>
         /// 获取上传数据。
         /// </summary>
@@ -33,10 +43,9 @@ namespace LaborAndSocialSecurity.Uploaders
         protected override IEnumerable<Team> GetData(object parm)
         {
             IEnumerable<Team> result = null;
+            var filtered = cache.Select($"cooperator_id = { this.cooperator_id }");
 
-            DataSet set = DBHelperMySQL.TryQuery($"SELECT S.group_id, S.cooperator_id, P.project_id, P.credit_code, P.unit_name, S.`name`, P.remark FROM f_group S INNER JOIN f_cooperator P ON S.cooperator_id = P.cooperator_id WHERE P.cooperator_id = { this.cooperator_id };");
-
-            result = from row in set.Tables[0].AsEnumerable()
+            result = from row in filtered
                      select new Team
                      {
                          projectCode = this.projectCode,

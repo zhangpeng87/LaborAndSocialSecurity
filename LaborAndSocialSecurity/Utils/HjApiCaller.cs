@@ -1,6 +1,7 @@
 ﻿using LaborAndSocialSecurity.Uploaders;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json.Linq;
+using Polly;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,11 +28,25 @@ namespace LaborAndSocialSecurity.Utils
         public JObject ReadyToCall(object input)
         {
             var command = new Dispatcher.ApiInvokeCommand(this, input);
-            var autoEvent = Dispatcher.Instance.EnqueueCommand(command);
-            autoEvent.WaitOne();
-            autoEvent.Dispose();
+            var result = Policy
+                            .HandleResult<JObject>(r =>
+                            {
+                                return r.SelectToken("message")?.ToString().IndexOf("频繁") > -1;
+                            })
+                            .WaitAndRetry(5, retryCount =>
+                            {
+                                return TimeSpan.FromSeconds(1);
+                            })
+                            .Execute(() =>
+                            {
+                                var autoEvent = Dispatcher.Instance.EnqueueCommand(command);
+                                autoEvent.WaitOne();
+                                autoEvent.Dispose();
 
-            return command.Output;
+                                return command.Output;
+                            });
+
+            return result;
         }
     }
 

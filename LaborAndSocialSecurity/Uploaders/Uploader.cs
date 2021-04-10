@@ -40,7 +40,7 @@ namespace LaborAndSocialSecurity.Uploaders
             //        this.UploadData(item);
 
             list.AsParallel()
-                .WithDegreeOfParallelism(5)
+                .WithDegreeOfParallelism(10)
                 .ForAll(item =>
                 {
                     DateTime time;

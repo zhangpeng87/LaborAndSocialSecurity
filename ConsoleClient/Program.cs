@@ -38,28 +38,6 @@ namespace ConsoleClient
             Console.WriteLine(RequestMethod.GET.Description());
         }
 
-        static void Main004(string[] args)
-        {
-            //EnterpriseUploader uploader = new EnterpriseUploader();
-            //var result = uploader.GetData();
-            
-            WebApiCaller<Jsonp> caller = new WebApiCaller<Jsonp>
-            {
-                Method = RequestMethod.POST,
-                ContentType = RequestContentType.URLENCODEED,
-                Callback = Jsonp.Parse
-            };
-
-            string url = "http://122.189.155.124:9209/HomeService.asmx/GetRenStatisToday";
-            var queryString = new Hashtable()
-            {
-                { "uid", 4 },
-                { "jsoncallback", "GetRenStatisToday" }
-            };
-            
-            var result = caller.Call(url, queryString, null);
-        }
-
         static void Main007(string[] args)
         {
             string json = "{\"data\":{\"requestSerialCode\": null},\"code\": \"0\",\"message\": \"调用成功\"}";
@@ -88,30 +66,6 @@ namespace ConsoleClient
             enterprise.UploadCompleted += (sender, e) => { project.BeginUpload(null); };
 
             project.UploadCompleted += (sender, e) => { cooperator.BeginUpload(null); };
-        }
-
-        static void Main010(string[] args)
-        {
-            var info = new
-            {
-                projectName = "空管工程",
-                contractorCorpCode = "91420100177738297E"
-            };
-
-            string requestSerialCode = null;
-
-            try
-            {
-                HjApi api = new HjApi() { Endpoint = "open/api/get", Method = "Project.Info", Version = "2.1" };
-                var result = HjApiCaller.CallOpenApi(api, info);
-                requestSerialCode = result["data"]["requestSerialCode"]?.ToString();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-
-            Console.WriteLine(requestSerialCode);
         }
 
         static void Main011(string[] args)

@@ -1,6 +1,5 @@
 ﻿using LaborAndSocialSecurity.Models;
 using LaborAndSocialSecurity.Utils;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -33,6 +32,20 @@ namespace LaborAndSocialSecurity.Uploaders
             this.project_id = project_id;
         }
 
+        #region 静态成员
+        private static readonly string QueryString;
+        // 缓存查询结果
+        private static readonly DataTable cache = new DataTable();
+
+        static ProjectSubContractorUploader()
+        {
+            // 只查询总包和劳务分包数据
+            QueryString = $"SELECT cooperator_id, company_id, project_id, unit_name, unit_type, credit_code, unit_person, contacts_mobile, remark FROM f_cooperator S WHERE S.project_id = { HjApiCaller.Project_id } AND S.unit_type IN (1,2,3,4,5,6,9,12,13) AND S.`status` = 1;";
+            var resultSet = DBHelperMySQL.TryQuery(QueryString);
+            cache = resultSet.Tables[0];
+        }
+        #endregion
+        
         /// <summary>
         /// 获取上传数据。
         /// </summary>
@@ -40,10 +53,9 @@ namespace LaborAndSocialSecurity.Uploaders
         protected override IEnumerable<ProjectSubContractor> GetData(object parm)
         {
             IEnumerable<ProjectSubContractor> result = null;
-            // 只查询总包和劳务分包数据
-            DataSet set = DBHelperMySQL.TryQuery($"SELECT cooperator_id, company_id, project_id, unit_name, unit_type, credit_code, unit_person, contacts_mobile, remark FROM f_cooperator S WHERE S.project_id = { this.project_id } AND S.unit_type IN (1,2,3,4,5,6,9,12,13) AND S.`status` = 1;");
+            var filtered = cache.Select();
 
-            result = from row in set.Tables[0].AsEnumerable()
+            result = from row in filtered
                      where !string.IsNullOrEmpty(row["remark"]?.ToString()?.Trim())
                      select new ProjectSubContractor
                      {

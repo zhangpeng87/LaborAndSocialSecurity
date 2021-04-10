@@ -17,6 +17,18 @@ namespace LaborAndSocialSecurity.Uploaders
             this.parm4GetData = workers.workerList.FirstOrDefault();
         }
 
+        #region 静态成员
+        private static readonly string QueryString;
+        // 缓存查询结果
+        private static readonly DataTable cache = new DataTable();
+        static WorkerAttendanceUploader()
+        {
+            QueryString = $"SELECT S.record_id, S.project_id, S.worker_id, S.device_id, S.record_time, S.type FROM zhgd_person.d_card_record S INNER JOIN zhgd_lw.f_worker W ON S.worker_id = W.worker_id INNER JOIN zhgd_lw.f_group G ON W.group_id = G.group_id INNER JOIN zhgd_lw.f_cooperator C ON G.cooperator_id = C.cooperator_id WHERE S.record_time BETWEEN '2021-04-04 00:00:00' AND '2021-04-04 23:59:59' AND C.project_id = { HjApiCaller.Project_id };";
+            var resultSet = DBHelperMySQL.TryQuery(QueryString);
+            cache = resultSet.Tables[0];
+        }
+        #endregion
+
         /// <summary>
         /// 获取上传数据。
         /// </summary>
@@ -26,10 +38,9 @@ namespace LaborAndSocialSecurity.Uploaders
             Worker worker = parm as Worker;
             // 此处必须固定 1条
             const int size = 1;
+            var filtered = cache.Select($"worker_id = { worker.associated.worker_id }");
 
-            DataSet set = DBHelperMySQL.TryQuery($"SELECT record_id, project_id, worker_id, device_id, record_time, type FROM d_card_record S WHERE S.worker_id = { worker.associated.worker_id } AND record_time BETWEEN '2021-04-01 00:00:00' AND '2021-04-01 23:59:59' ORDER BY S.record_time DESC;", "zhgd_person");
-
-            double d = set.Tables[0].Rows.Count * 1d / size;
+            double d = filtered.Length * 1d / size;
             int total = (int)Math.Ceiling(d);
 
             for (int i = 0; i < total; i++)
@@ -38,7 +49,7 @@ namespace LaborAndSocialSecurity.Uploaders
                 {
                     projectCode = this.workers.projectCode,
                     teamSysNo = this.workers.teamSysNo,
-                    dataList = from row in set.Tables[0].AsEnumerable().Skip(i * size).Take(size)
+                    dataList = from row in filtered.Skip(i * size).Take(size)
                                select new Attendance
                                {
                                    id = Convert.ToInt32(row["record_id"]),

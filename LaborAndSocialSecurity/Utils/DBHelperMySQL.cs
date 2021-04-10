@@ -78,7 +78,7 @@ namespace LaborAndSocialSecurity.Utils
                         .Or<MySqlException>()
                         .Retry(3, (exception, retryCount, context) =>
                         {
-                            LogUtils4Error.Logger.Debug($"当前抛出异常：{ exception.Message }；开始第{ retryCount }次重试：{ SQLString }... ...");
+                            LogUtils4Error.Logger.Debug($"当前抛出异常：{ exception.InnerException.Message }；开始第{ retryCount }次重试：{ SQLString }... ...");
                         })
                         .Execute(() =>
                         {
@@ -119,6 +119,13 @@ namespace LaborAndSocialSecurity.Utils
                 }
             }
             return ds;
+        }
+
+        public static void Dispose()
+        {
+            portForwarded.Stop();
+            client.Disconnect();
+            client.Dispose();
         }
     }
 }

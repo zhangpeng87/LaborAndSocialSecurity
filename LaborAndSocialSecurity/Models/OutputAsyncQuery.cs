@@ -1,6 +1,7 @@
 ﻿using LaborAndSocialSecurity.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +17,6 @@ namespace LaborAndSocialSecurity.Models
     class OutputAsyncQuery : OutputSuper
     {
         private string requestSerialCode;
-        private int invokeCount = 0;
-        private readonly int maxCount = 3;
-        private AutoResetEvent autoEvent = new AutoResetEvent(false);
 
         public OutputAsyncQuery(string requestSerialCode)
         {
@@ -29,32 +27,22 @@ namespace LaborAndSocialSecurity.Models
         {
             if (string.IsNullOrEmpty(this.requestSerialCode)) return null;
 
-            OutputResult result = null;
-            
-            TimerCallback callback = (state) =>
-            {
-                HjApi api = new HjApi() { Endpoint = "open/api/async", Method = "Async", Version = "2.1" };
-                JObject res = api.ReadyToCall(new { requestSerialCode });
-                invokeCount++;
+            var json = Policy
+                        .HandleResult<JObject>(r =>
+                        {
+                            return string.Compare(AsyncProcessStatus.待处理.Description(), r.SelectToken("data")?.SelectToken("status")?.ToString()) == 0;
+                        })
+                        .WaitAndRetry(30, retryCount =>
+                        {
+                            return TimeSpan.FromSeconds(1);
+                        })
+                        .Execute(() =>
+                        {
+                            HjApi api = new HjApi() { Endpoint = "open/api/async", Method = "Async", Version = "2.1" };
+                            return api.ReadyToCall(new { requestSerialCode });
+                        });
 
-                if (res["message"]?.ToString().IndexOf("频繁") > -1) return;
-
-                string sts = res["data"]?["status"]?.ToString();
-                if (invokeCount == maxCount || AsyncProcessStatus.处理成功.Description().Equals(sts))
-                { // 查询完成
-                    result = JsonConvert.DeserializeObject<OutputResult>(res?.ToString());
-
-                    invokeCount = 0;
-                    autoEvent.Set();
-                }
-            };
-
-            Timer stateTimer = new Timer(callback, this.requestSerialCode, 1000, 1300);
-
-            autoEvent.WaitOne();
-            stateTimer.Dispose();
-
-            return result;
+            return JsonConvert.DeserializeObject<OutputResult>(json?.ToString());
         }
     }
 }

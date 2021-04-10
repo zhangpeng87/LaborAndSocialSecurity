@@ -69,9 +69,10 @@ namespace LaborAndSocialSecurity.Uploaders
 
         #region 成员方法
 
+        private static readonly object lockObj = new object();
         public AutoResetEvent EnqueueCommand(ApiInvokeCommand command)
         {
-            lock (this)
+            lock (lockObj)
             {
                 AutoResetEvent autoEvent = new AutoResetEvent(false);
                 this.mQueues.Enqueue(new Tuple<ApiInvokeCommand, AutoResetEvent>(command, autoEvent));
@@ -80,7 +81,6 @@ namespace LaborAndSocialSecurity.Uploaders
         }
 
         private static readonly object obj = new object();
-
         private void TimerCallback(object state)
         {
             lock (obj)
@@ -89,9 +89,16 @@ namespace LaborAndSocialSecurity.Uploaders
                 {
                     var item = mQueues.Dequeue();
                     item.Item1.Execute();
-                    LogUtils4Debug.Logger.Debug($"命令队列弹出命令项并执行...当前数量: { mQueues.Count }");
                     item.Item2.Set();
                 }
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return mQueues.Count;
             }
         }
 
