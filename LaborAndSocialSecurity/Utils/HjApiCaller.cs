@@ -25,7 +25,7 @@ namespace LaborAndSocialSecurity.Utils
         public string Version { get; set; }                     // 接口版本
         public string Format { get; set; } = "json";            // 返回类型
 
-        public JObject ReadyToCall(object input)
+        public JObject Invoke(object input)
         {
             var command = new Dispatcher.ApiInvokeCommand(this, input);
             var result = Policy
@@ -33,10 +33,7 @@ namespace LaborAndSocialSecurity.Utils
                             {
                                 return r.SelectToken("message")?.ToString().IndexOf("频繁") > -1;
                             })
-                            .WaitAndRetry(5, retryCount =>
-                            {
-                                return TimeSpan.FromSeconds(1);
-                            })
+                            .Retry(3)
                             .Execute(() =>
                             {
                                 var autoEvent = Dispatcher.Instance.EnqueueCommand(command);

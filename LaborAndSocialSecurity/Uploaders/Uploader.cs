@@ -28,19 +28,9 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             // 获取上传数据
             var list = this.GetData(parm4GetData);
-
-            //DateTime time;
-            //OutputResult result;
-
-            //// 进行上传数据
-            //foreach (T item in list)
-            //    if (HasSuccessfulUploaded(item, out time, out result))
-            //        this.Notify(time, item, result);
-            //    else
-            //        this.UploadData(item);
-
+            
             list.AsParallel()
-                .WithDegreeOfParallelism(10)
+                .WithDegreeOfParallelism(16)
                 .ForAll(item =>
                 {
                     DateTime time;
@@ -86,7 +76,6 @@ namespace LaborAndSocialSecurity.Uploaders
         {
             try
             {
-                LogUtils4Debug.Logger.Debug($"开始上传数据：{ data.Serialize2JSON() }");
                 DateTime start = DateTime.Now;
                 OutputResult result = data.Upload();
                 OutputContext context = new OutputContext(result, data);

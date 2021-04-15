@@ -39,7 +39,7 @@ namespace LaborAndSocialSecurity.Models
                         .Execute(() =>
                         {
                             HjApi api = new HjApi() { Endpoint = "open/api/async", Method = "Async", Version = "2.1" };
-                            return api.ReadyToCall(new { requestSerialCode });
+                            return api.Invoke(new { requestSerialCode });
                         });
 
             return JsonConvert.DeserializeObject<OutputResult>(json?.ToString());

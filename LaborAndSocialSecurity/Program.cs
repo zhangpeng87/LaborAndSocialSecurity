@@ -192,7 +192,7 @@ namespace LaborAndSocialSecurity
         /// <param name="e"></param>
         static void UploadCompletedEventDebugLogHandler(object sender, UploadCompletedEventArgs e)
         {
-            LogUtils4Debug.Logger.Debug($"The args of { sender.GetType().Name }.UploadCompleted: { e.Serialize2JSON() }");
+            //LogUtils4Debug.Logger.Debug($"The args of { sender.GetType().Name }.UploadCompleted: { e.Serialize2JSON() }");
         }
         
         /// <summary>
@@ -237,7 +237,7 @@ namespace LaborAndSocialSecurity
                 contractorCorpCode = "91420100744771385L"                               //  施工方统一社会信用代码
             };
 
-            var output = api.ReadyToCall(input);
+            var output = api.Invoke(input);
 
             Console.WriteLine(output.Serialize2JSON());
         }

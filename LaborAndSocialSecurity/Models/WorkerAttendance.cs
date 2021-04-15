@@ -44,7 +44,7 @@ namespace LaborAndSocialSecurity.Models
                 Format = "json"
             };
 
-            return JsonConvert.DeserializeObject<OutputResult>(api.ReadyToCall(this).ToString());
+            return JsonConvert.DeserializeObject<OutputResult>(api.Invoke(this).ToString());
         }
     }
 }
