@@ -60,12 +60,8 @@ namespace LaborAndSocialSecurity.Uploaders
             time = record.UploadTime;
             data = JsonConvert.DeserializeObject<T>(record.UploadedData);
             result = JsonConvert.DeserializeObject<OutputResult>(record.UploadResult);
-
-            string code = result.code;
-            string status = result.data?["status"]?.ToString();
-
-            // 成功/失败地上传过
-            return OutputCode.成功.Equals(code) && AsyncStatus.处理成功.Equals(status);
+            
+            return record.IsSuccess;
         }
 
         /// <summary>
@@ -80,8 +76,7 @@ namespace LaborAndSocialSecurity.Uploaders
                 OutputResult result = data.Upload();
                 OutputContext context = new OutputContext(result, data);
                 OutputResult final = context.NextCall();
-                // 记录上传情况：上传时间、上传数据、返回结果
-                this.SaveUpload(start, data, final);
+                
                 // 通知上传完成事件订阅者
                 OnUploadCompleted(new UploadCompletedEventArgs(start, data, final, false));
             }
@@ -109,9 +104,15 @@ namespace LaborAndSocialSecurity.Uploaders
         /// <param name="time"></param>
         /// <param name="data"></param>
         /// <param name="result"></param>
-        private void SaveUpload(DateTime time, T data, OutputResult result)
+        private void SaveUpload(DateTime time, IUploadable data, OutputResult result)
         {
-            string sql = $"INSERT INTO upload_record ( data_type, data_id, upload_time, uploaded_data, upload_result, project_name ) VALUES  ( '{ data.GetType().Name }', { data.DataId }, '{ time.ToString("yyyy-MM-dd HH:mm:ss") }', '{ data.Serialize2JSON() }', '{ result.Serialize2JSON() }', '{ HjApiCaller.ProjectName }' );";
+            bool is_success = false;
+            string code = result.code;
+            string status = result.data?.SelectToken("status")?.ToString();
+
+            if (OutputCode.成功.Equals(code) && AsyncStatus.处理成功.Equals(status)) is_success = true;
+
+            string sql = $"INSERT INTO upload_record ( data_type, data_id, upload_time, is_success, uploaded_data, upload_result, project_name ) VALUES  ( '{ data.GetType().Name }', { data.DataId }, '{ time.ToString("yyyy-MM-dd HH:mm:ss") }', { Convert.ToInt32(is_success) }, '{ data.Serialize2JSON() }', '{ result.Serialize2JSON() }', '{ HjApiCaller.ProjectName }' );";
             ArDBConnection.ExceuteSQLNoReturn(sql);
         }
 
@@ -121,7 +122,7 @@ namespace LaborAndSocialSecurity.Uploaders
         /// <returns></returns>
         private UploadRecord GetUploadRecord(T data)
         {
-            string sql = $"SELECT TOP 1 S.data_type, S.data_id, S.uploaded_data, S.upload_result, S.upload_time FROM upload_record S WHERE S.data_type = '{ data.GetType().Name }' AND S.data_id = { data.DataId } ORDER BY S.upload_time DESC;";
+            string sql = $"SELECT TOP 1 S.data_type, S.data_id, S.uploaded_data, S.upload_result, S.upload_time, S.is_success, S.project_name FROM upload_record S WHERE S.data_type = '{ data.GetType().Name }' AND S.data_id = { data.DataId } AND is_deleted = 0 ORDER BY S.upload_time DESC;";
             var result = ArDBConnection.ExceuteSQLDataTable(sql);
 
             if (result == null || result.Rows.Count == 0) return null;
@@ -133,6 +134,8 @@ namespace LaborAndSocialSecurity.Uploaders
                 UploadTime = Convert.ToDateTime(first["upload_time"]),
                 UploadedData = Convert.ToString(first["uploaded_data"]),
                 UploadResult = Convert.ToString(first["upload_result"]),
+                IsSuccess = Convert.ToBoolean(first["is_success"]),
+                ProjectName = Convert.ToString(first["project_name"]),
             };
 
             return record;
@@ -146,6 +149,8 @@ namespace LaborAndSocialSecurity.Uploaders
         /// <param name="e"></param>
         protected virtual void OnUploadCompleted(UploadCompletedEventArgs e)
         {
+            if(!e.HasSuccessfulUploaded)
+                this.SaveUpload(e.UploadTime, e.UploadedData, e.UploadedResult);
             this.UploadCompleted?.Invoke(this, e);
         }
     }

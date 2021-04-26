@@ -13,5 +13,7 @@ namespace LaborAndSocialSecurity.Models
         public string UploadedData { get; set; }
         public string UploadResult { get; set; }
         public DateTime UploadTime { get; set; }
+        public bool IsSuccess { get; set; }
+        public string ProjectName { get; set; }
     }
 }

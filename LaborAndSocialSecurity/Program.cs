@@ -1,22 +1,51 @@
 ﻿using LaborAndSocialSecurity.Models;
 using LaborAndSocialSecurity.Uploaders;
 using LaborAndSocialSecurity.Utils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Drawing;
+using Timer = System.Threading.Timer;
+using System.Reflection;
 
 namespace LaborAndSocialSecurity
 {
     public class Program
     {
+        #region extern functions
+
+        [DllImport("kernel32.dll")]
+        public static extern bool AllocConsole();
+
+        [DllImport("kernel32.dll")]
+        public static extern bool FreeConsole();
+
+        [DllImport("kernel32.dll")]
+        public static extern bool AttachConsole(int ProcessId);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        // Find window by Caption only. Note you must pass IntPtr.Zero as the first parameter.
+        // Also consider whether you're being lazy or not.
+        [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
+        static extern IntPtr FindWindowByCaption(IntPtr ZeroOnly, string lpWindowName);
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        #endregion
+
         private static bool anyExceptions = false;
+        private static NotifyIcon notifyIcon = new NotifyIcon();
+        private static bool Visible = false;
+
         #region 上传客户端
 
         private static readonly Timer timer = new Timer(TimerCallback, null, 1000, 3000);
@@ -27,34 +56,52 @@ namespace LaborAndSocialSecurity
             lock (obj)
             {
                 Console.Clear();
-                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName }, 关联中的线程数量：{ Process.GetCurrentProcess().Threads.Count }, 命令队列中的数量：{ Dispatcher.Instance.Count }."); 
+                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName }, 活动中的线程数量：{ Process.GetCurrentProcess().Threads.Count }, 命令队列中的数量：{ Dispatcher.Instance.Count }."); 
             }
         }
 
         static void Main(string[] args)
         {
+            SetConsoleWindowVisibility(Visible);
+            notifyIcon.DoubleClick += (s, e) =>
+            {
+                Visible = !Visible;
+                SetConsoleWindowVisibility(Visible);
+            };
+            notifyIcon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            notifyIcon.Visible = true;
+            notifyIcon.Text = "实名制信息推送程序【鄂州市劳保】";
+
             // 初始化上传标段参数
             if (!HjApiCaller.TryInit())
                 Environment.Exit(0);
             
             try
             {
-                StartUpload();
+                Task.Factory
+                    .StartNew(StartUpload)
+                    .ContinueWith(t => 
+                    {
+                        anyExceptions = (t.Exception != null);
+                        Application.Exit();
+                    });
             }
             catch (Exception e)
             {
                 LogUtils4Error.Logger.Error(e.Message);
-                anyExceptions = true;
             }
             finally
             {
+                Application.Run();
+                notifyIcon.Visible = false;
+
                 // 1、日志记录完成
                 LogUtils4Debug.Logger.Debug($"================={ HjApiCaller.ProjectName }，已上传完成！=================");
                 LogUtils.Logger.Info($"{ HjApiCaller.ProjectName },{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },上传完成并{ (anyExceptions ? "有" : "无")}异常发生");
 
                 DBHelperMySQL.Dispose();
                 // 2、打开新的程序
-                var p = Process.Start("LaborAndSocialSecurity.exe");
+                var p = Process.Start(Assembly.GetExecutingAssembly().Location);
 
                 Environment.Exit(0);
             }
@@ -122,9 +169,11 @@ namespace LaborAndSocialSecurity
         {
             bool isSuccess = false;
             string code = e.UploadedResult.code;
-            string status = e.UploadedResult.data?["status"]?.ToString();
+            string status = e.UploadedResult.data.SelectToken("status")?.ToString();
 
-            if (OutputCode.成功.Equals(code) && AsyncStatus.处理成功.Equals(status)) isSuccess = true;
+            if (OutputCode.成功.Equals(code) && 
+                AsyncStatus.处理成功.Equals(status) &&
+                !e.HasSuccessfulUploaded) isSuccess = true;
 
             if (!isSuccess) return;
 
@@ -156,6 +205,7 @@ namespace LaborAndSocialSecurity
 
             ProjectWorkerUploader workerUploader = new ProjectWorkerUploader(teamSysNo, data);
             workerUploader.UploadCompleted += UploadCompletedEventDebugLogHandler;
+            // 人员上传成功后，上传考勤
             workerUploader.UploadCompleted += WorkerInfoUploadCompletedEventHandler;
 
             workerUploader.BeginUpload();
@@ -218,109 +268,16 @@ namespace LaborAndSocialSecurity
 
         #endregion
 
-        static void Main100(string[] args)
+        public static void SetConsoleWindowVisibility(bool visible)
         {
-            HjApi api = new HjApi
+            IntPtr hWnd = FindWindow(null, Console.Title);
+            if (hWnd != IntPtr.Zero)
             {
-                Endpoint = "open/api/get",
-                Method = "Project.Info",
-                Version = "2.1"
-            };
-
-            HjApiCaller.AppId = "db4cad1e537443478718d518f1943c2a";
-            HjApiCaller.Appsecret = "af25f376ca4240a4927c487bf965de72";
-            HjApiCaller.Host = @"http://219.138.224.85:7004";
-
-            var input = new
-            {
-                projectName = "新建湖北鄂州民用机场工程信息弱电工程（一标段）",        // 项目名称
-                contractorCorpCode = "91420100744771385L"                               //  施工方统一社会信用代码
-            };
-
-            var output = api.Invoke(input);
-
-            Console.WriteLine(output.Serialize2JSON());
-        }
-        
-        static void Main200(string[] args)
-        {
-            string s = "{\"code\":\"1\",\"data\":null}";
-            JObject j = JObject.Parse(s);
-
-            // j["message"]?.ToString().IndexOf("频繁") > -1
-            
+                if (visible) ShowWindow(hWnd, 1); //1 = SW_SHOWNORMAL           
+                else ShowWindow(hWnd, 0); //0 = SW_HIDE               
+            }
         }
 
-        static void Main300(string[] args)
-        {
-            int index = 1;
-            int size = 10;
-            string code = "ff80808176c65dd00176d66faff20015";
 
-            var result = Team.Query(index, size, code);
-
-        }
-
-        static void Main400(string[] args)
-        {
-            string code = "ff80808176c65dd00176d66faff20015";
-
-            var result = Team.SysNo(code, "土方四队");
-        }
-
-        static void Main500(string[] args)
-        {
-            string json = "{\"name\": \"hello\",\"age123\": \"success\",\"hobby\": [{\"obj1\": \"6\",\"obj2\": \"7\",\"obj3\": \"10\"}, {\"obj1\": \"6\",\"obj2\": \"7\",\"obj3\": \"10\"}]}";
-            var q = JObject.Parse(json);
-
-            bool r = q.ContainsKey("age13");
-        }
-
-        static void Main600(string[] args)
-        {
-            string j = @"
-                        {
-                            ""code"": 0,
-                            ""msg"": ""SUCCESS"",
-                            ""data"": {
-                                        ""name"": ""顾晓雪"",
-                                ""nickName"": ""顾晓雪"",
-                                ""phoneNumber"": ""15317870854"",
-                                ""countryCode"": ""86"",
-                                ""email"": ""505588907@qq.com"",
-                                ""sex"": 1,
-                                ""city"": ""上海市/市辖区/杨浦区"",
-                                ""work"": ""施工"",
-                                ""company"": ""译筑科技"",
-                                ""position"": ""BIM工程师"",
-                                ""project"": ""建筑"",
-                                ""isInvited"": false,
-                                ""protected"": false,
-                                ""createdAt"": ""2020-10-14T01:29:21.530Z"",
-                                ""updatedAt"": ""2020-10-14T01:30:53.694Z"",
-                                ""_id"": ""5f865471e3c1f9000fd61b88""
-                            }
-                        }";
-
-            var result = JObject.Parse(j);
-            var b = result.ContainsKey("data");
-            var v = result.SelectToken("$.data.phoneNumber")?.ToString();
-        }
-
-        static void Main700(string[] args)
-        {
-            List<int> list = new List<int> { 2, 7, 4, 2 };
-            string result = string.Join<int>(",", list);
-            Console.WriteLine(result);
-        }
-
-        static void Main800(string[] args)
-        {
-            var j = "{\"code\":\"1\",\"message\":\"请求过于频繁请稍后再试！\",\"data\":null}";
-            var r = JObject.Parse(j);
-
-            bool b = string.Compare(AsyncProcessStatus.待处理.Description(), r.SelectToken("data")?.SelectToken("status")?.ToString()) == 0;
-
-        }
     }
 }

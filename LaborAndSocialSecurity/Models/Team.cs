@@ -121,6 +121,8 @@ namespace LaborAndSocialSecurity.Models
         public void RecordTeamSysNo2File(string teamSysNo)
         {
             LogUtils4Team.Logger.Info($"{ this.associated.group_id },{ this.associated.cooperator_id },{ this.associated.project_id },{ this.teamName },{ this.corpName },{ this.corpCode },{ this.projectCode },{ teamSysNo }");
+            string sql = $"INSERT INTO uploaded_team ( group_id, cooperator_id, project_id, teamName, corpName, corpCode, projectCode, teamSysNo ) VALUES  ( { this.associated.group_id }, { this.associated.cooperator_id }, { this.associated.project_id }, N'{ this.teamName }', N'{ this.corpName }', N'{ this.corpCode }', N'{ this.projectCode }', N'{ teamSysNo }' );";
+            ArDBConnection.ExceuteSQLNoReturn(sql);
         }
     }
 }

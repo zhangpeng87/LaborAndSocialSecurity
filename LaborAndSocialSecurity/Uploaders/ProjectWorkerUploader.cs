@@ -86,7 +86,7 @@ namespace LaborAndSocialSecurity.Uploaders
 
             string code = result?.code;
             if (OutputCode.人员已存在.Equals(code)) return true;
-            else if (OutputCode.参数校验失败.Equals(code)) return true;
+            //else if (OutputCode.参数校验失败.Equals(code)) return true;
 
             return false;
         }

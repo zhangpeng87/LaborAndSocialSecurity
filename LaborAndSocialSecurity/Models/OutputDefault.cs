@@ -23,13 +23,13 @@ namespace LaborAndSocialSecurity.Models
 
         public override OutputResult NextCall()
         {
-            var message = new
-            {
-                OutputResult = this._result,
-                UploadedData = this._data
-            };
+            //var message = new
+            //{
+            //    OutputResult = this._result,
+            //    UploadedData = this._data
+            //};
 
-            LogUtils4Error.Logger.Debug(message.Serialize2JSON());
+            //LogUtils4Error.Logger.Debug(message.Serialize2JSON());
 
             return null;
         }
