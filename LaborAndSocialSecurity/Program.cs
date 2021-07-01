@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using Timer = System.Threading.Timer;
 using System.Reflection;
+using System.IO;
 
 namespace LaborAndSocialSecurity
 {
@@ -42,9 +43,10 @@ namespace LaborAndSocialSecurity
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         #endregion
 
-        private static bool anyExceptions = false;
+        private static bool anyException = false;
         private static NotifyIcon notifyIcon = new NotifyIcon();
         private static bool Visible = false;
+        private static string DebugFile = $@"D:\LogFile\LaborAndSocialSecurity\DebugLog\Debug{ DateTime.Now.ToString("yyyyMMdd") }.log";
 
         #region 上传客户端
 
@@ -56,7 +58,7 @@ namespace LaborAndSocialSecurity
             lock (obj)
             {
                 Console.Clear();
-                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName }, 活动中的线程数量：{ Process.GetCurrentProcess().Threads.Count }, 命令队列中的数量：{ Dispatcher.Instance.Count }."); 
+                Console.WriteLine($"当前正在上传标段：{ HjApiCaller.ProjectName } { Environment.NewLine }活动中的线程数量：{ Process.GetCurrentProcess().Threads.Count } { Environment.NewLine }命令队列中的数量：{ Dispatcher.Instance.Count } { Environment.NewLine }最近的日志大小是：{ $"{ (File.Exists(DebugFile) ? Convert.ToDouble(new FileInfo(DebugFile).Length / 1024).ToString("0") : "0") }KB" }.");
             }
         }
 
@@ -82,7 +84,7 @@ namespace LaborAndSocialSecurity
                     .StartNew(StartUpload)
                     .ContinueWith(t => 
                     {
-                        anyExceptions = (t.Exception != null);
+                        anyException = (t.Exception != null);
                         Application.Exit();
                     });
             }
@@ -97,7 +99,7 @@ namespace LaborAndSocialSecurity
 
                 // 1、日志记录完成
                 LogUtils4Debug.Logger.Debug($"================={ HjApiCaller.ProjectName }，已上传完成！=================");
-                LogUtils.Logger.Info($"{ HjApiCaller.ProjectName },{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },上传完成并{ (anyExceptions ? "有" : "无")}异常发生");
+                LogUtils.Logger.Info($"{ HjApiCaller.ProjectName },{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },上传完成并{ (anyException ? "有" : "无")}异常发生");
 
                 DBHelperMySQL.Dispose();
                 // 2、打开新的程序

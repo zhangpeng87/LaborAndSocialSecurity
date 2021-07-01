@@ -56,11 +56,12 @@ namespace LaborAndSocialSecurity.Uploaders
             var filtered = cache.Select();
 
             result = from row in filtered
-                     where !string.IsNullOrEmpty(row["remark"]?.ToString()?.Trim())
+                     where !string.IsNullOrEmpty(row["remark"]?.ToString()?.Trim()) ||
+                           !string.IsNullOrEmpty(row["credit_code"]?.ToString()?.Trim())
                      select new ProjectSubContractor
                      {
-                         projectCode = this.projectCode,
-                         corpCode = row["remark"].ToString(),
+                         projectCode = HjApiCaller.ProjectCode,
+                         corpCode = "".Equals(row["remark"].ToString().Trim()) ? row["credit_code"].ToString() : row["remark"].ToString().Trim(),
                          corpName = row["unit_name"].ToString(),
                          corpType = ProjectSubContractor.ConvertCooperatorType(row["unit_type"].ToString()),
                          manager = string.IsNullOrEmpty(row["unit_person"].ToString()) ? "未知" : row["unit_person"].ToString(),

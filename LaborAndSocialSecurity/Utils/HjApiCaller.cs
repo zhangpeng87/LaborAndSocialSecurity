@@ -6,7 +6,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Web;
 
@@ -78,7 +80,7 @@ namespace LaborAndSocialSecurity.Utils
                     uploadedProjects.Add(parser.ReadFields()[0]);
             }
             // 2、读取标段配置文件
-            using (TextFieldParser parser = new TextFieldParser(@"D:\LogFile\LaborAndSocialSecurity\UploadedInfo\Project.csv"))
+            using (TextFieldParser parser = new TextFieldParser($"{ Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) }\\Project.csv"))
             {
                 parser.TextFieldType = FieldType.Delimited;
                 parser.SetDelimiters(",");

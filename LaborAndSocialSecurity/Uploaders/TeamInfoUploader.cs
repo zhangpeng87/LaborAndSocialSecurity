@@ -46,12 +46,12 @@ namespace LaborAndSocialSecurity.Uploaders
             var filtered = cache.Select($"cooperator_id = { this.cooperator_id }");
 
             result = from row in filtered
+                     where !string.IsNullOrEmpty(row["remark"]?.ToString()?.Trim()) ||
+                           !string.IsNullOrEmpty(row["credit_code"]?.ToString()?.Trim())
                      select new Team
                      {
-                         projectCode = this.projectCode,
-                         //corpCode = "91420100177738297E",
-                         corpCode = row["remark"].ToString(),
-                         //corpCode = row["credit_code"].ToString(),
+                         projectCode = HjApiCaller.ProjectCode,
+                         corpCode = "".Equals(row["remark"].ToString().Trim()) ? row["credit_code"].ToString() : row["remark"].ToString().Trim(),
                          corpName = row["unit_name"].ToString(),
                          teamName = row["name"].ToString(),
                          remark = "",

@@ -2,6 +2,7 @@
 using LaborAndSocialSecurity.Utils;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 
@@ -23,7 +24,22 @@ namespace LaborAndSocialSecurity.Uploaders
         private static readonly DataTable cache = new DataTable();
         static WorkerAttendanceUploader()
         {
-            QueryString = $"SELECT S.record_id, S.project_id, S.worker_id, S.device_id, S.record_time, S.type FROM zhgd_person.d_card_record S INNER JOIN zhgd_lw.f_worker W ON S.worker_id = W.worker_id INNER JOIN zhgd_lw.f_group G ON W.group_id = G.group_id INNER JOIN zhgd_lw.f_cooperator C ON G.cooperator_id = C.cooperator_id WHERE S.record_time BETWEEN '2021-04-17 00:00:00' AND '2021-04-17 23:59:59' AND C.project_id = { HjApiCaller.Project_id };";
+            string start, end;
+            start = end = DateTime.Now.ToString("yyyy-MM-dd");
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpecialDate"]))
+            {
+                try
+                {
+                    start = ConfigurationManager.AppSettings["SpecialDate"].Split(',')[0];
+                    end = ConfigurationManager.AppSettings["SpecialDate"].Split(',')[1];
+                }
+                catch (Exception e)
+                {
+                    LogUtils4Error.Logger.Error(e.InnerException);
+                    throw;
+                }
+            }
+            QueryString = $"SELECT S.record_id, S.project_id, S.worker_id, S.device_id, S.record_time, S.type FROM zhgd_person.d_card_record S INNER JOIN zhgd_lw.f_worker W ON S.worker_id = W.worker_id INNER JOIN zhgd_lw.f_group G ON W.group_id = G.group_id INNER JOIN zhgd_lw.f_cooperator C ON G.cooperator_id = C.cooperator_id WHERE S.record_time BETWEEN '{ start } 00:00:00' AND '{ end } 23:59:59' AND C.project_id = { HjApiCaller.Project_id };";
             var resultSet = DBHelperMySQL.TryQuery(QueryString);
             cache = resultSet.Tables[0];
         }

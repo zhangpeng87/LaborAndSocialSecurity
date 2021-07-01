@@ -68,7 +68,7 @@ namespace LaborAndSocialSecurity.Uploaders
                                      headImage = Worker.DefaultHeadImage,
                                      tel = string.IsNullOrEmpty(row["mobile"].ToString()) ? "13888888888" : row["mobile"].ToString(),
                                      startDate = DBNull.Value.Equals(row["entry_time"]) ? "1900-01-01" : Convert.ToDateTime(row["entry_time"]).ToString("yyyy-MM-dd"),
-                                     endDate = new DateTime(2021, 6, 30).ToString("yyyy-MM-dd"),
+                                     endDate = new DateTime(2021, 12, 31).ToString("yyyy-MM-dd"),
                                      associated = new WorkerAssociated
                                      {
                                          worker_id = Convert.ToInt32(row["worker_id"]),
