@@ -30,7 +30,7 @@ namespace LaborAndSocialSecurity.Uploaders
             var list = this.GetData(parm4GetData);
             
             list.AsParallel()
-                .WithDegreeOfParallelism(16)
+                .WithDegreeOfParallelism(32)
                 .ForAll(item =>
                 {
                     DateTime time;

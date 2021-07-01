@@ -11,7 +11,7 @@ namespace LaborAndSocialSecurity.Utils
     class ArDBConnection
 
     {
-        public static string strConnectinfo = System.Configuration.ConfigurationSettings.AppSettings["ARDB_ConnectString"];
+        public static string strConnectinfo = System.Configuration.ConfigurationSettings.AppSettings["Staff_ConnectString"];
         private static SqlConnection connection = new SqlConnection(strConnectinfo);
         private static DateTime dtConnect = DateTime.Now;
         public static void OpenConnect()

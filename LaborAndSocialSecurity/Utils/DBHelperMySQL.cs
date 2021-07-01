@@ -59,7 +59,7 @@ namespace LaborAndSocialSecurity.Utils
 
         static DBHelperMySQL()
         {
-            client = new SshClient("122.189.155.124", 9011, "root", "Admin20181028");
+            client = new SshClient("122.189.155.124", 9011, "root", "PinmingSYH@1024!~@1024!~----====");
             client.Connect();
 
             if (client.IsConnected)
